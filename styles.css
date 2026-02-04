@@ -25,6 +25,7 @@
 html{ scroll-behavior: smooth; }
 body{
   margin: 0;
+  min-height: 100vh;
   color: var(--ink);
   background: radial-gradient(1200px 800px at 10% 0%, rgba(217,119,87,.10), transparent 55%),
               radial-gradient(1000px 700px at 90% 10%, rgba(106,155,204,.12), transparent 55%),
@@ -479,10 +480,7 @@ hr{
 }
 
 @media (min-width: 760px){
-  .container{ padding: 34px 28px 88px; }
-  .card{ grid-column: span 6; }
-}
-  .container{ padding: 34px 28px 88px; }
+  .container{ padding: 34px 28px 40px; }
   .card{ grid-column: span 6; }
 }
 
