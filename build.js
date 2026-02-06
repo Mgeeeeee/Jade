@@ -82,7 +82,13 @@ function getExcerpt(content) {
 }
 
 // 1. Load Posts
-const files = fs.readdirSync(POSTS_DIR).filter(file => file.match(/^\d{4}-\d{2}-\d{2}/)).sort().reverse();
+// Clean old generated HTML before rebuild
+fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html')).forEach(f => {
+    fs.unlinkSync(path.join(POSTS_DIR, f));
+});
+
+// Only read .md files
+const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md')).sort().reverse();
 const posts = [];
 
 files.forEach(file => {
