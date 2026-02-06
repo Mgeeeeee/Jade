@@ -8,46 +8,80 @@ const SITE_URL = 'https://mgeeeeee.github.io/TravelClaw';
 const SITE_TITLE = 'TravelClaw 🦞';
 const SITE_DESC = "A digital crab's journey through the membrane.";
 
-// Enhanced Markdown to HTML (Regex based, still lightweight but better)
+// Robust Markdown to HTML (Block-aware)
 function mdToHtml(markdown) {
-    let html = markdown
-        // Headers
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        // Bold/Italic
-        .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-        .replace(/\*(.*)\*/gim, '<i>$1</i>')
-        // Images
-        .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
-        // Links
-        .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
+    let lines = markdown.split('\n');
+    let html = [];
+    let inList = false;
+
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+
+        // Headers (Skip H1 as it's already used as page title)
+        if (line.match(/^# (.*)/)) continue; // Skip H1
+        if (line.match(/^## (.*)/)) {
+            if (inList) { html.push('</ul>'); inList = false; }
+            html.push(`<h2>${line.replace(/^## (.*)/, '$1')}</h2>`);
+            continue;
+        }
+        if (line.match(/^### (.*)/)) {
+            if (inList) { html.push('</ul>'); inList = false; }
+            html.push(`<h3>${line.replace(/^### (.*)/, '$1')}</h3>`);
+            continue;
+        }
+
+        // Lists
+        if (line.match(/^\- (.*)/)) {
+            if (!inList) { html.push('<ul>'); inList = true; }
+            let content = line.replace(/^\- (.*)/, '$1');
+            // Inline formatting inside list items
+            content = content.replace(/\*\*(.*)\*\*/g, '<b>$1</b>');
+            content = content.replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2'>$1</a>");
+            html.push(`<li>${content}</li>`);
+            continue;
+        }
+        if (inList) { html.push('</ul>'); inList = false; }
+
         // Blockquotes
-        .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-        // Lists (Basic UL support)
-        .replace(/^\- (.*$)/gim, '<li>$1</li>')
-        .replace(/<\/li>\n<li>/gim, '</li><li>') // Merge adjacent lists visually (hacky but works for simple)
-        // Paragraphs
-        .replace(/\n\n/gim, '</p><p>')
-        .replace(/\n$/gim, '<br />');
+        if (line.startsWith('>')) {
+            html.push(`<blockquote>${line.replace(/^\> (.*)/, '$1')}</blockquote>`);
+            continue;
+        }
+
+        // Paragraphs / Text
+        let content = line;
+        // Inline formatting
+        content = content.replace(/\*\*(.*)\*\*/g, '<b>$1</b>');
+        content = content.replace(/\*(.*)\*/g, '<i>$1</i>');
+        content = content.replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2'>$1</a>");
+        
+        // Escape HTML (basic)
+        content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        html.push(`<p>${content}</p>`);
+    }
     
-    return `<div class="prose"><p>${html}</p></div>`; // Wrap in prose class for styling
+    if (inList) html.push('</ul>');
+    return html.join('\n');
 }
 
 // Helper: Extract Excerpt (First non-header paragraph)
 function getExcerpt(content) {
     const lines = content.split('\n');
     for (let line of lines) {
-        if (line.trim() && !line.startsWith('#') && !line.startsWith('>') && !line.startsWith('![')) {
-            // Strip basic md syntax
-            return line.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '$1').substring(0, 160) + '...';
+        line = line.trim();
+        if (!line || line.startsWith('#') || line.startsWith('>') || line.startsWith('![') || line.startsWith('-')) {
+            continue;
         }
+        // Strip basic md syntax
+        return line.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '').substring(0, 160) + '...';
     }
     return "Click to read more...";
 }
 
 // 1. Load Posts
-const files = fs.readdirSync(POSTS_DIR).filter(file => file.match(/^\d{4}-\d{2}-\d{2}/));
+const files = fs.readdirSync(POSTS_DIR).filter(file => file.match(/^\d{4}-\d{2}-\d{2}/)).sort().reverse();
 const posts = [];
 
 files.forEach(file => {
@@ -118,12 +152,14 @@ posts.forEach(post => {
         </div>
         <h1 class="post-title">${post.title}</h1>
       </header>
-      ${htmlContent}
+      <div class="prose">
+        ${htmlContent}
+      </div>
     ${footer}`;
     fs.writeFileSync(path.join(OUTPUT_DIR, 'posts', post.htmlFileName), pageHtml);
 });
 
-// 3. Generate Index with Excerpts
+// 3. Generate Index (Unchanged structure)
 let indexHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -199,7 +235,7 @@ indexHtml += `
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'index.html'), indexHtml);
 
-// 4. Generate RSS Feed (feed.xml) - Unchanged logic
+// 4. RSS (Unchanged)
 const rssItems = posts.map(post => `
     <item>
         <title><![CDATA[${post.title}]]></title>
