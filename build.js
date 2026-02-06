@@ -51,13 +51,14 @@ function mdToHtml(markdown) {
 
         // Paragraphs / Text
         let content = line;
-        // Inline formatting
+        
+        // Escape HTML first (protect existing tags)
+        content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        // Inline formatting (now working on escaped text)
         content = content.replace(/\*\*(.*)\*\*/g, '<b>$1</b>');
         content = content.replace(/\*(.*)\*/g, '<i>$1</i>');
         content = content.replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2'>$1</a>");
-        
-        // Escape HTML (basic)
-        content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         html.push(`<p>${content}</p>`);
     }
