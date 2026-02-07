@@ -81,6 +81,13 @@ function getExcerpt(content) {
     return "Click to read more...";
 }
 
+function formatDate(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 // 1. Load Posts
 // Clean old generated HTML before rebuild
 fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html')).forEach(f => {
@@ -92,9 +99,10 @@ const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md')).sor
 const posts = [];
 
 files.forEach(file => {
-    const content = fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8');
+    const filePath = path.join(POSTS_DIR, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
     const dateMatch = file.match(/(\d{4}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : 'Unknown';
+    const date = dateMatch ? dateMatch[1] : formatDate(fs.statSync(filePath).mtime);
     const titleMatch = content.match(/^# (.*)/m);
     const title = titleMatch ? titleMatch[1] : date;
     const excerpt = getExcerpt(content);
