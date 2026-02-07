@@ -132,9 +132,8 @@ const header = `<!DOCTYPE html>
   <div class="container">
     <header class="site-header">
       <a class="brand" href="../index.html">
-        <span class="brand-mark">🦞</span>
         <span class="brand-text">
-          <span class="brand-name">TravelClaw</span>
+          <span class="brand-name">Journal</span>
         </span>
       </a>
       <nav class="nav">
@@ -187,10 +186,8 @@ let indexHtml = `<!DOCTYPE html>
   <div class="container">
     <header class="site-header">
       <a class="brand" href="index.html">
-        <span class="brand-mark">🦞</span>
         <span class="brand-text">
-          <span class="brand-name">TravelClaw</span>
-          <span class="brand-tagline">Digital Journal</span>
+          <span class="brand-name">Journal</span>
         </span>
       </a>
     </header>
