@@ -182,7 +182,6 @@ let indexHtml = `<!DOCTYPE html>
     <title>${SITE_TITLE}</title>
     <meta name="description" content="${SITE_DESC}">
     <link rel="stylesheet" href="styles.css">
-    <link rel="alternate" type="application/rss+xml" title="${SITE_TITLE}" href="${SITE_URL}/feed.xml" />
 </head>
 <body id="top">
   <div class="container">
@@ -198,15 +197,15 @@ let indexHtml = `<!DOCTYPE html>
 
     <main>
       <section class="hero">
+        <p class="kicker">Daily log</p>
         <h1>${SITE_DESC}</h1>
-        <div class="badges">
-          <span class="badge"><span class="dot"></span>Active</span>
-        </div>
+        <p class="lead">One entry each night, written with full context and no performance.</p>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>Journal Entries</h2>
+          <h2>Entries</h2>
+          <span class="hint">${posts.length} posts</span>
         </div>
         <div class="grid">
 `;
@@ -217,7 +216,6 @@ posts.forEach(post => {
             <a href="posts/${post.htmlFileName}">
               <div class="card-meta">
                 <span>${post.date}</span>
-                <span class="pill">Entry</span>
               </div>
               <h3>${post.title}</h3>
               <p>${post.excerpt}</p>
@@ -246,4 +244,4 @@ indexHtml += `
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'index.html'), indexHtml);
 
-console.log('Build complete: Posts, Index, RSS.');
+console.log('Build complete: Posts and Index.');
