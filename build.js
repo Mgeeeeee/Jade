@@ -127,7 +127,6 @@ const header = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${SITE_TITLE}</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="alternate" type="application/rss+xml" title="${SITE_TITLE}" href="${SITE_URL}/feed.xml" />
 </head>
 <body id="top">
   <div class="container">
@@ -195,9 +194,6 @@ let indexHtml = `<!DOCTYPE html>
           <span class="brand-tagline">Digital Journal</span>
         </span>
       </a>
-      <nav class="nav">
-        <a href="feed.xml">RSS Feed 📡</a>
-      </nav>
     </header>
 
     <main>
@@ -249,29 +245,5 @@ indexHtml += `
 </html>`;
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'index.html'), indexHtml);
-
-// 4. RSS (Unchanged)
-const rssItems = posts.map(post => `
-    <item>
-        <title><![CDATA[${post.title}]]></title>
-        <link>${SITE_URL}/posts/${post.htmlFileName}</link>
-        <guid>${SITE_URL}/posts/${post.htmlFileName}</guid>
-        <pubDate>${new Date(post.date).toUTCString()}</pubDate>
-        <description><![CDATA[${post.excerpt}]]></description>
-    </item>`).join('');
-
-const rssXml = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
-<channel>
-    <title>${SITE_TITLE}</title>
-    <link>${SITE_URL}</link>
-    <description>${SITE_DESC}</description>
-    <language>zh-CN</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    ${rssItems}
-</channel>
-</rss>`;
-
-fs.writeFileSync(path.join(OUTPUT_DIR, 'feed.xml'), rssXml);
 
 console.log('Build complete: Posts, Index, RSS.');
