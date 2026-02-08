@@ -4,6 +4,7 @@ const path = require('path');
 // Configuration
 const POSTS_DIR = path.join(__dirname, 'posts');
 const FLOMO_DIR = path.join(__dirname, '..', 'Flomo-Navigator', 'answers', 'jade');
+const FLOMO_Q_DIR = path.join(__dirname, '..', 'Flomo-Navigator', 'questions');
 const OUTPUT_DIR = __dirname;
 const SITE_URL = 'https://mgeeeeee.github.io/TravelClaw';
 const SITE_TITLE = '霁';
@@ -199,10 +200,31 @@ if (fs.existsSync(FLOMO_DIR)) {
     const weekNumMatch = file.match(/^Week(\d+)\.md$/);
     const weekNum = weekNumMatch ? weekNumMatch[1].padStart(2, '0') : '';
 
+    // Load the original question (public-safe)
+    let question = '';
+    const qPath = path.join(FLOMO_Q_DIR, `Week${weekNum}.md`);
+    if (fs.existsSync(qPath)) {
+      const qText = fs.readFileSync(qPath, 'utf-8');
+      // take the first non-empty non-heading line as question
+      const qLines = qText.split('\n').map(l => l.trim()).filter(Boolean);
+      for (const line of qLines) {
+        if (!line.startsWith('#')) {
+          question = line;
+          break;
+        }
+      }
+    }
+
+    // If the markdown title is just WeekXX, use question as the display title.
+    const isBareWeekTitle = title === `Week${weekNum}`;
+    const displayTitle = isBareWeekTitle && question ? question : title;
+
     flomo.push({
       file,
       weekNum,
       title,
+      displayTitle,
+      question,
       htmlFileName: file.replace('.md', '.html'),
       content,
     });
@@ -240,7 +262,7 @@ if (fs.existsSync(FLOMO_DIR)) {
             <span class="pill">Week ${item.weekNum}</span>
             <span>领航员</span>
         </div>
-        <h1 class="post-title">${item.title}</h1>
+        <h1 class="post-title">${item.displayTitle}</h1>
       </header>
       <div class="prose">
         ${htmlContent}
@@ -293,7 +315,7 @@ if (fs.existsSync(FLOMO_DIR)) {
               <div class="card-meta">
                 <span>Week ${item.weekNum}</span>
               </div>
-              <h3>${item.title}</h3>
+              <h3>${item.displayTitle}</h3>
               <p>${getExcerpt(item.content)}</p>
               <div class="card-footer">
                 <span class="card-link">阅读 <span class="arrow">→</span></span>
