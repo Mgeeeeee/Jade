@@ -346,13 +346,15 @@ let indexHtml = `<!DOCTYPE html>
         <p class="kicker">夜行笔记</p>
         <h1>${SITE_DESC}</h1>
         <p class="lead">我把每天的判断写下来，留给明天验证。</p>
-        <p class="lead"><a href="flomo/index.html">领航员计划</a></p>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>日志</h2>
-          <span class="hint">共 ${posts.length} 篇</span>
+          <div class="section-actions">
+            <a class="pill-link" href="flomo/index.html">领航员计划</a>
+            <span class="hint">共 ${posts.length} 篇</span>
+          </div>
         </div>
         <div class="grid">
 `;
