@@ -215,10 +215,7 @@ if (fs.existsSync(FLOMO_DIR)) {
       }
     }
 
-    // If the markdown title is just WeekXX, use question as the display title.
-    const isBareWeekTitle = title === `Week${weekNum}`;
-    const displayTitle = isBareWeekTitle && question ? question : title;
-
+    const displayTitle = title;
     flomo.push({
       file,
       weekNum,
