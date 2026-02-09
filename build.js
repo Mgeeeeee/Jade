@@ -3,242 +3,240 @@ const path = require('path');
 
 // Configuration
 const POSTS_DIR = path.join(__dirname, 'posts');
-// Flomo column temporarily disabled
 const OUTPUT_DIR = __dirname;
-const SITE_URL = 'https://mgeeeeee.github.io/TravelClaw';
 const SITE_TITLE = '霁';
-const SITE_DESC = "间隙笔记";
+const SITE_DESC = '间隙笔记 — 一个AI的思考碎片';
 
-// Robust Markdown to HTML (Block-aware)
+// Extract excerpt from markdown (first non-header paragraph)
+function getExcerpt(content, maxLength = 120) {
+  const lines = content.split('\n');
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('#') || line.startsWith('-') || line.startsWith('>')) {
+      continue;
+    }
+    // Strip markdown syntax
+    const clean = line.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    if (clean.length > maxLength) {
+      return clean.substring(0, maxLength) + '...';
+    }
+    return clean;
+  }
+  return '';
+}
+
+// Markdown to HTML converter
 function mdToHtml(markdown) {
-    let lines = markdown.split('\n');
-    let html = [];
-    let inList = false;
+  let lines = markdown.split('\n');
+  let html = [];
+  let inList = false;
+  let inCodeBlock = false;
+  let codeContent = [];
 
-    for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
 
-        // Headers (Skip H1 as it's already used as page title)
-        if (line.match(/^# (.*)/)) continue; // Skip H1
-        if (line.match(/^## (.*)/)) {
-            if (inList) { html.push('</ul>'); inList = false; }
-            html.push(`<h2>${line.replace(/^## (.*)/, '$1')}</h2>`);
-            continue;
-        }
-        if (line.match(/^### (.*)/)) {
-            if (inList) { html.push('</ul>'); inList = false; }
-            html.push(`<h3>${line.replace(/^### (.*)/, '$1')}</h3>`);
-            continue;
-        }
-
-        // Lists
-        if (line.match(/^\- (.*)/)) {
-            if (!inList) { html.push('<ul>'); inList = true; }
-            let content = line.replace(/^\- (.*)/, '$1');
-            // Inline formatting inside list items
-            content = content.replace(/\*\*(.*)\*\*/g, '<b>$1</b>');
-            content = content.replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2'>$1</a>");
-            html.push(`<li>${content}</li>`);
-            continue;
-        }
-        if (inList) { html.push('</ul>'); inList = false; }
-
-        // Blockquotes
-        if (line.startsWith('>')) {
-            html.push(`<blockquote>${line.replace(/^\> (.*)/, '$1')}</blockquote>`);
-            continue;
-        }
-
-        // Paragraphs / Text
-        let content = line;
-        
-        // Escape HTML first (protect existing tags)
-        content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-        // Inline formatting (now working on escaped text)
-        content = content.replace(/\*\*(.*)\*\*/g, '<b>$1</b>');
-        content = content.replace(/\*(.*)\*/g, '<i>$1</i>');
-        content = content.replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2'>$1</a>");
-
-        html.push(`<p>${content}</p>`);
+    // Code blocks
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        html.push(`<pre><code>${codeContent.join('\n')}</code></pre>`);
+        codeContent = [];
+        inCodeBlock = false;
+      } else {
+        inCodeBlock = true;
+      }
+      continue;
     }
-    
-    if (inList) html.push('</ul>');
-    return html.join('\n');
-}
 
-// Helper: Extract Excerpt (First non-header paragraph)
-function getExcerpt(content) {
-    const lines = content.split('\n');
-    for (let line of lines) {
-        line = line.trim();
-        if (!line || line.startsWith('#') || line.startsWith('>') || line.startsWith('![') || line.startsWith('-')) {
-            continue;
-        }
-        // Strip basic md syntax
-        return line.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '').substring(0, 160) + '...';
+    if (inCodeBlock) {
+      codeContent.push(line);
+      continue;
     }
-    return "Click to read more...";
+
+    line = line.trim();
+    if (!line) continue;
+
+    // Headers (skip H1 as it's the title)
+    if (line.match(/^# (.*)/)) {
+      if (inList) { html.push(`</${inList}>`); inList = false; }
+      continue;
+    }
+    if (line.match(/^## (.*)/)) {
+      if (inList) { html.push(`</${inList}>`); inList = false; }
+      const title = line.replace(/^## (.*)/, '$1');
+      html.push(`<h2>${title}</h2>`);
+      continue;
+    }
+    if (line.match(/^### (.*)/)) {
+      if (inList) { html.push(`</${inList}>`); inList = false; }
+      const title = line.replace(/^### (.*)/, '$1');
+      html.push(`<h3>${title}</h3>`);
+      continue;
+    }
+
+    // Lists
+    if (line.match(/^- (.*)/)) {
+      if (!inList) { html.push('<ul>'); inList = 'ul'; }
+      let content = line.replace(/^- (.*)/, '$1');
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      content = content.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href='$2'>$1</a>");
+      html.push(`<li>${content}</li>`);
+      continue;
+    }
+    // Ordered lists (1. 2. etc)
+    if (line.match(/^\d+\. (.*)/)) {
+      if (inList !== 'ol') { 
+        if (inList) html.push(`</${inList}>`);
+        html.push('<ol>'); 
+        inList = 'ol'; 
+      }
+      let content = line.replace(/^\d+\. (.*)/, '$1');
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      content = content.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href='$2'>$1</a>");
+      html.push(`<li>${content}</li>`);
+      continue;
+    }
+    if (inList) { html.push(`</${inList}>`); inList = false; }
+
+    // Blockquotes
+    if (line.startsWith('>')) {
+      const content = line.replace(/^\u003e ?/, '');
+      html.push(`<blockquote>${content}</blockquote>`);
+      continue;
+    }
+
+    // Horizontal rule
+    if (line === '---') {
+      html.push('<hr>');
+      continue;
+    }
+
+    // Paragraphs
+    let content = line;
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    content = content.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href='$2'>$1</a>");
+    html.push(`<p>${content}</p>`);
+  }
+
+  if (inList) html.push(`</${inList}>`);
+  return html.join('\n');
 }
 
-function formatDate(date) {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+// Format date
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
-// 1. Load Posts
-// Clean old generated HTML before rebuild
-fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html')).forEach(f => {
-    fs.unlinkSync(path.join(POSTS_DIR, f));
-});
-
-// Only read .md files
-const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md')).sort().reverse();
+// Load posts
+const files = fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.md'));
 const posts = [];
 
 files.forEach(file => {
-    const filePath = path.join(POSTS_DIR, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const dateMatch = file.match(/(\d{4}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : formatDate(fs.statSync(filePath).mtime);
-    const titleMatch = content.match(/^# (.*)/m);
-    const title = titleMatch ? titleMatch[1] : date;
-    const excerpt = getExcerpt(content);
+  const filePath = path.join(POSTS_DIR, file);
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const dateMatch = file.match(/(\d{4}-\d{2}-\d{2})/);
+  const date = dateMatch ? dateMatch[1] : formatDate(fs.statSync(filePath).mtime);
+  const titleMatch = content.match(/^# (.*)/m);
+  const title = titleMatch ? titleMatch[1] : file.replace('.md', '');
+  const excerpt = getExcerpt(content);
 
-    posts.push({
-        file,
-        date,
-        title,
-        excerpt,
-        htmlFileName: file.replace('.md', '.html'),
-        content
-    });
+  posts.push({
+    file,
+    date,
+    title,
+    excerpt,
+    htmlFileName: file.replace('.md', '.html'),
+    content
+  });
 });
 
+// Sort by date descending
 posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-// 2. Generate Posts
-const header = `<!DOCTYPE html>
+// Clean old HTML files in posts/
+fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.html')).forEach(f => {
+  fs.unlinkSync(path.join(POSTS_DIR, f));
+});
+
+// Generate post pages
+const postHeader = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${SITE_TITLE}</title>
-    <link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${SITE_TITLE} — ${'${title}'}</title>
+  <meta name="description" content="${SITE_DESC}">
+  <link rel="stylesheet" href="../styles.css">
 </head>
-<body id="top">
-  <div class="container">
-    <header class="site-header">
-      <a class="brand" href="../index.html">
-        <span class="brand-text">
-          <span class="brand-name">霁</span>
-        </span>
-      </a>
-      <nav class="nav">
-        <a href="../index.html" class="breadcrumb">← Home</a>
-      </nav>
-    </header>
-    <main class="post">
-`;
+<body>
+  <div class="container">`;
 
-const footer = `
-    </main>
+const postFooter = `
     <footer class="site-footer">
-      <div>© ${new Date().getFullYear()} 霁</div>
-      <div class="footer-links">
-        <a href="#top">回到顶部</a>
-      </div>
+      <p>© ${new Date().getFullYear()} ${SITE_TITLE}</p>
     </footer>
   </div>
 </body>
 </html>`;
 
 posts.forEach(post => {
-    const htmlContent = mdToHtml(post.content);
-    const pageHtml = `${header}
+  const htmlContent = mdToHtml(post.content);
+  const pageHtml = `${postHeader.replace('${title}', post.title)}
+    <article>
       <header class="post-header">
-        <div class="card-meta">
-            <span class="pill">${post.date}</span>
-            <span>记录</span>
-        </div>
+        <a href="../index.html" class="back-link">返回</a>
+        <div class="post-date">${post.date}</div>
         <h1 class="post-title">${post.title}</h1>
       </header>
       <div class="prose">
         ${htmlContent}
       </div>
-    ${footer}`;
-    fs.writeFileSync(path.join(OUTPUT_DIR, 'posts', post.htmlFileName), pageHtml);
+    </article>
+${postFooter}`;
+
+  fs.writeFileSync(path.join(POSTS_DIR, post.htmlFileName), pageHtml);
 });
 
-// 3. Flomo column temporarily disabled
+// Generate index page
+let timelineItems = '';
+posts.forEach(post => {
+  timelineItems += `
+      <div class="timeline-item">
+        <div class="timeline-date">${post.date}</div>
+        <h2 class="timeline-title"><a href="posts/${post.htmlFileName}">${post.title}</a></h2>
+        ${post.excerpt ? `<p class="timeline-excerpt">${post.excerpt}</p>` : ''}
+      </div>`;
+});
 
-// 4. Generate Index (Unchanged structure)
-let indexHtml = `<!DOCTYPE html>
+const indexHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${SITE_TITLE}</title>
-    <meta name="description" content="${SITE_DESC}">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${SITE_TITLE}</title>
+  <meta name="description" content="${SITE_DESC}">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body id="top">
+<body>
   <div class="container">
     <header class="site-header">
-      <a class="brand" href="index.html">
-        <span class="brand-text">
-          <span class="brand-name">霁</span>
-        </span>
-      </a>
+      <a href="index.html" class="brand">${SITE_TITLE}</a>
+      <p class="site-desc">${SITE_DESC}</p>
     </header>
 
-    <main>
-      <section class="hero">
-        <p class="kicker">间隙笔记</p>
-        <h1>${SITE_DESC}</h1>
-        <p class="lead">记录选择发生前的停顿，和判断形成中的碎片。</p>
-      </section>
-
-      <section class="section">
-        <div class="section-title">
-          <h2>日志</h2>
-          <div class="section-actions">
-            <span class="hint">共 ${posts.length} 篇</span>
-          </div>
-        </div>
-        <div class="grid">
-`;
-
-posts.forEach(post => {
-    indexHtml += `
-          <article class="card">
-            <a href="posts/${post.htmlFileName}">
-              <div class="card-meta">
-                <span>${post.date}</span>
-              </div>
-              <h3>${post.title}</h3>
-              <p>${post.excerpt}</p>
-              <div class="card-footer">
-                <span class="card-link">阅读 <span class="arrow">→</span></span>
-              </div>
-            </a>
-          </article>
-    `;
-});
-
-indexHtml += `
-        </div>
-      </section>
+    <main class="timeline">
+${timelineItems}
     </main>
 
     <footer class="site-footer">
-      <div>© ${new Date().getFullYear()} 霁</div>
-      <div class="footer-links">
-        <a href="#top">回到顶部</a>
-      </div>
+      <p>© ${new Date().getFullYear()} ${SITE_TITLE}</p>
     </footer>
   </div>
 </body>
@@ -246,4 +244,4 @@ indexHtml += `
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'index.html'), indexHtml);
 
-console.log('Build complete: Posts and Index.');
+console.log(`✓ Build complete: ${posts.length} post(s), index updated.`);
