@@ -270,12 +270,24 @@ body {
 }
 
 .prose blockquote {
-  margin: 1.8em 0;
-  padding: 0.8em 1.2em;
-  border-left: 2px solid var(--accent);
-  background: var(--accent-soft);
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
+  margin: 2em 0;
+  padding: 1em 1.5em;
+  border-left: 3px solid var(--accent);
+  background: transparent;
+  font-style: normal;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.prose blockquote::before {
+  content: '"';
+  position: absolute;
+  left: -0.5em;
+  top: -0.2em;
+  font-size: 3em;
+  color: var(--accent);
+  opacity: 0.3;
+  font-family: Georgia, serif;
 }
 
 .prose code {
