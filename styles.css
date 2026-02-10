@@ -305,6 +305,93 @@ body {
   margin: 3em 0;
 }
 
+/* 表格样式 */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2em 0;
+  font-size: 0.9em;
+}
+
+.prose th,
+.prose td {
+  padding: 0.8em 1em;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.prose th {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.prose tr:hover {
+  background: var(--accent-soft);
+}
+
+/* 有序列表序号样式 */
+.prose ol {
+  counter-reset: ordered-list;
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ol > li {
+  counter-increment: ordered-list;
+  position: relative;
+  padding-left: 2.5em;
+}
+
+.prose ol > li::before {
+  content: counter(ordered-list) ".";
+  position: absolute;
+  left: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.85em;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* 无序列表 */
+.prose ul > li {
+  position: relative;
+  padding-left: 1.5em;
+}
+
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+/* 图片 */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  margin: 1.5em 0;
+}
+
+/* 强调 */
+.prose strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prose em {
+  font-style: italic;
+}
+
 /* ===== Footer ===== */
 .site-footer {
   margin-top: 120px;
