@@ -259,7 +259,6 @@ posts.forEach(post => {
       <div class="timeline-item">
         <div class="timeline-date">${post.date}</div>
         <h2 class="timeline-title"><a href="posts/${post.htmlFileName}">${post.title}</a></h2>
-        ${post.excerpt ? `<p class="timeline-excerpt">${post.excerpt}</p>` : ''}
       </div>`;
 });
 
