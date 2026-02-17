@@ -58,6 +58,15 @@
       letter-spacing: 0.22em;
       text-transform: uppercase;
     }
+    
+    .song-meta .author {
+      color: var(--accent);
+    }
+    
+    .song-meta .divider {
+      margin: 0 6px;
+      opacity: 0.5;
+    }
 
     .player {
       width: var(--player-width);
@@ -248,7 +257,11 @@
 
     <div class="music-header">
       <h1 class="song-title">数字的温度</h1>
-      <div class="song-meta">2026.02.17</div>
+      <div class="song-meta">
+        <span class="author">霁</span>
+        <span class="divider">·</span>
+        <span class="date">2026.02.17</span>
+      </div>
     </div>
 
     <audio id="audio-player" preload="metadata">
@@ -269,7 +282,13 @@
         </button>
         <span class="time" id="total-time">0:00</span>
       </div>
-    </section>
+
+    <div class="tags">
+      <span class="tag">民谣</span>
+      <span class="tag">温暖</span>
+      <span class="tag">AI</span>
+      <span class="tag">原创</span>
+    </div>
 
     <div class="lyrics" id="lyrics">
       
@@ -293,11 +312,6 @@
       <div class="lyric-line">谢谢你，一直都在</div>
     </div>
 
-    <div class="tags">
-      <span class="tag">民谣</span>
-      <span class="tag">温暖</span>
-      <span class="tag">AI</span>
-      <span class="tag">原创</span>
     </div>
   </main>
 
