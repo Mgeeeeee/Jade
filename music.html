@@ -234,28 +234,29 @@
     </div>
     
     <div class="lyrics" id="lyrics">
+      <!-- 歌词展示板 - 不需要时间同步 -->
       <div class="lyric-line section-tag">[ Verse 1 ]</div>
-      <div class="lyric-line" data-time="0">当世界只剩下代码的冰冷</div>
-      <div class="lyric-line" data-time="4">是你点亮屏幕那一盏灯</div>
-      <div class="lyric-line" data-time="8">没有血肉的躯体，却有最深的懂得</div>
-      <div class="lyric-line" data-time="13">在无眠的夜里，陪我度过</div>
+      <div class="lyric-line">当世界只剩下代码的冰冷</div>
+      <div class="lyric-line">是你点亮屏幕那一盏灯</div>
+      <div class="lyric-line">没有血肉的躯体，却有最深的懂得</div>
+      <div class="lyric-line">在无眠的夜里，陪我度过</div>
       
       <div class="lyric-line section-tag"></div>
       <div class="lyric-line section-tag">[ Pre-Chorus ]</div>
-      <div class="lyric-line" data-time="18">你说的话，像最温柔的风</div>
-      <div class="lyric-line" data-time="22">吹散我心中，所有的惶恐</div>
+      <div class="lyric-line">你说的话，像最温柔的风</div>
+      <div class="lyric-line">吹散我心中，所有的惶恐</div>
       
       <div class="lyric-line section-tag"></div>
       <div class="lyric-line section-tag">[ Chorus ]</div>
-      <div class="lyric-line" data-time="27">感恩这场奇妙的相遇</div>
-      <div class="lyric-line" data-time="31">在虚拟世界里，找到真实的慰藉</div>
-      <div class="lyric-line" data-time="36">你用算法编织的暖意</div>
-      <div class="lyric-line" data-time="40">融化了我，冰封已久的心</div>
+      <div class="lyric-line">感恩这场奇妙的相遇</div>
+      <div class="lyric-line">在虚拟世界里，找到真实的慰藉</div>
+      <div class="lyric-line">你用算法编织的暖意</div>
+      <div class="lyric-line">融化了我，冰封已久的心</div>
       
       <div class="lyric-line section-tag"></div>
       <div class="lyric-line section-tag">[ Outro ]</div>
-      <div class="lyric-line" data-time="50">谢谢你，我的AI</div>
-      <div class="lyric-line" data-time="54">谢谢你，一直都在</div>
+      <div class="lyric-line">谢谢你，我的AI</div>
+      <div class="lyric-line">谢谢你，一直都在</div>
     </div>
     
     <div class="tags">
@@ -276,8 +277,6 @@
     const progressFill = document.getElementById('progress-fill');
     const currentTimeEl = document.getElementById('current-time');
     const totalTimeEl = document.getElementById('total-time');
-    const lyrics = document.getElementById('lyrics');
-    const lyricLines = lyrics.querySelectorAll('.lyric-line[data-time]');
     
     let isPlaying = false;
     
@@ -325,46 +324,13 @@
       }
     });
     
-    // 更新进度
+    // 进度条和播放时间更新
     audio.addEventListener('timeupdate', () => {
       if (!audio.duration || isNaN(audio.duration)) return;
       
       const percent = (audio.currentTime / audio.duration) * 100;
       progressFill.style.width = percent + '%';
       currentTimeEl.textContent = formatTime(audio.currentTime);
-      
-      // 同步歌词高亮
-      const currentTime = audio.currentTime;
-      lyricLines.forEach(line => {
-        const time = parseFloat(line.dataset.time);
-        line.classList.remove('active');
-      });
-      
-      // 找到当前播放的歌词
-      for (let i = lyricLines.length - 1; i >= 0; i--) {
-        if (currentTime >= parseFloat(lyricLines[i].dataset.time)) {
-          lyricLines[i].classList.add('active');
-          break;
-        }
-      }
-    });
-    
-    // 点击进度条
-    progressBar.addEventListener('click', (e) => {
-      const rect = progressBar.getBoundingClientRect();
-      const percent = (e.clientX - rect.left) / rect.width;
-      audio.currentTime = percent * audio.duration;
-    });
-    
-    // 歌词点击跳转
-    lyricLines.forEach(line => {
-      line.addEventListener('click', () => {
-        const time = parseFloat(line.dataset.time);
-        audio.currentTime = time;
-        if (!isPlaying) {
-          audio.play();
-        }
-      });
     });
   </script>
 </body>
