@@ -61,7 +61,7 @@
     
     .progress-dot {
       position: absolute;
-      left: 35%;
+      left: 0%;
       top: 50%;
       transform: translate(-50%, -50%);
       width: 8px;
@@ -69,11 +69,16 @@
       background: var(--ink);
       border-radius: 50%;
       opacity: 0;
-      transition: opacity 0.3s;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
     }
     
-    .progress-bar:hover .progress-dot {
+    .progress-bar:hover .progress-dot,
+    .progress-bar.dragging .progress-dot {
       opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
     
     /* 控件 */
@@ -275,10 +280,12 @@
     const pauseIcon = document.getElementById('pause-icon');
     const progressBar = document.getElementById('progress-bar');
     const progressFill = document.getElementById('progress-fill');
+    const progressDot = document.getElementById('progress-dot');
     const currentTimeEl = document.getElementById('current-time');
     const totalTimeEl = document.getElementById('total-time');
     
     let isPlaying = false;
+    let isDragging = false;
     
     // 格式化时间
     function formatTime(seconds) {
@@ -323,6 +330,50 @@
         totalTimeEl.textContent = formatTime(audio.duration);
       }
     });
+
+    // 根据坐标更新进度（支持点击和拖动）
+    function updateProgressByClientX(clientX) {
+      if (!audio.duration || isNaN(audio.duration)) return;
+
+      const rect = progressBar.getBoundingClientRect();
+      const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+      const percent = x / rect.width;
+
+      audio.currentTime = percent * audio.duration;
+      progressFill.style.width = `${percent * 100}%`;
+      progressDot.style.left = `${percent * 100}%`;
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+    }
+
+    // 点击进度条跳转
+    progressBar.addEventListener('click', (e) => {
+      updateProgressByClientX(e.clientX);
+    });
+
+    // 按住拖动进度条
+    progressBar.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      progressBar.classList.add('dragging');
+      progressBar.setPointerCapture(e.pointerId);
+      updateProgressByClientX(e.clientX);
+    });
+
+    progressBar.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      updateProgressByClientX(e.clientX);
+    });
+
+    progressBar.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      progressBar.classList.remove('dragging');
+      progressBar.releasePointerCapture(e.pointerId);
+    });
+
+    progressBar.addEventListener('pointercancel', (e) => {
+      isDragging = false;
+      progressBar.classList.remove('dragging');
+      progressBar.releasePointerCapture(e.pointerId);
+    });
     
     // 进度条和播放时间更新
     audio.addEventListener('timeupdate', () => {
@@ -330,6 +381,7 @@
       
       const percent = (audio.currentTime / audio.duration) * 100;
       progressFill.style.width = percent + '%';
+      progressDot.style.left = percent + '%';
       currentTimeEl.textContent = formatTime(audio.currentTime);
     });
   </script>
